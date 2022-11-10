@@ -44,10 +44,10 @@ class RandomizeScript(scripts.Script):
 
 	def _opt(self, opt, p, prefix='randomize_param_'):
 		opt_name = f'{prefix}{opt}'
-		option: str = getattr(shared.opts, opt_name)
-		split: list[str] = option.split(',')
-		if split[0].isdigit():
-			vals = [float(v) for v in split]
+		opt_val: str = getattr(shared.opts, opt_name)
+		opt_arr: list[str] = opt_val.split(',')
+		if opt_arr[0].isdigit():
+			vals = [float(v) for v in opt_arr]
 			rand = self._rand(vals[0], vals[1], vals[2])
 			if rand.is_integer():
 				return int(rand)
@@ -55,9 +55,9 @@ class RandomizeScript(scripts.Script):
 				return float(rand)
 		else:
 			if opt == 'sampler_index':
-				return build_samplers_dict(p).get(random.choice(split).lower(), None)
+				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
 			else:
-				return random.choice(split)
+				return random.choice(opt_arr)
 
 	def _rand(self, start: float, stop: float, step: float) -> float:
 		return random.randint(0, int((stop - start) / step)) * step + start
