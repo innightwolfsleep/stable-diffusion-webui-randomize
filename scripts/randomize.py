@@ -52,7 +52,7 @@ class RandomizeScript(scripts.Script):
 			if rand.is_integer():
 				return int(rand)
 			else:
-				return float(rand)
+				return round(float(rand), max(0, int(opt_arr[2][::-1].find('.'))))
 		else:
 			if opt == 'sampler_index':
 				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
