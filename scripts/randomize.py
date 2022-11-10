@@ -3,6 +3,7 @@ import random
 from modules import script_callbacks, scripts, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
+from modules.shared import opts
 from scripts.xy_grid import build_samplers_dict
 
 
@@ -16,15 +17,22 @@ class RandomizeScript(scripts.Script):
 	def process(self, p: StableDiffusionProcessing):
 		if shared.opts.randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
 			all_opts = list(vars(shared.opts)['data'].keys())
-			for param in [o for o in filter(lambda x: x.startswith('randomize_param_'), all_opts)]:
-				if len(getattr(shared.opts, param).strip()) > 0:
-					param_name = param.split('randomize_param_')[1]
-					try:
-						opt = self._opt(param_name, p)
-						if opt is not None:
-							setattr(p, param_name, opt)
-					except TypeError:
-						print(f'Failed to randomize param `{param_name}` -- incorrect value?')
+
+			# Base params
+			for param in self._list_params(all_opts):
+				try:
+					opt = self._opt(param, p)
+					if opt is not None:
+						setattr(p, param, opt)
+				except TypeError:
+					print(f'Failed to randomize param `{param}` -- incorrect value?')
+
+			# Other params
+			for param in self._list_params(all_opts, prefix='randomize_other_'):
+				if param == 'CLIP_stop_at_last_layers':
+					opts.data["CLIP_stop_at_last_layers"] = int(self._opt(param, p, prefix='randomize_other_')) # type: ignore
+
+			# Highres. fix param
 			if random.random() < float(shared.opts.randomize_hires or 0): # type: ignore
 				try:
 					setattr(p, 'width', self._opt('width', p, 'randomize_hires_'))
@@ -41,6 +49,11 @@ class RandomizeScript(scripts.Script):
 					print(f'Failed to utilize highres. fix -- incorrect value?')
 		else:
 			return
+
+	def _list_params(self, opts, prefix='randomize_param_'):
+		for param in [o for o in filter(lambda x: x.startswith(prefix), opts)]:
+				if len(getattr(shared.opts, param).strip()) > 0:
+					yield param.split(prefix)[1]
 
 	def _opt(self, opt, p, prefix='randomize_param_'):
 		opt_name = f'{prefix}{opt}'
@@ -83,5 +96,6 @@ def on_ui_settings():
 	shared.opts.add_option('randomize_hires_denoising_strength', shared.OptionInfo('0.5,0.8,0.05', 'Randomize Highres. Denoising Strength', section=('randomize', 'Randomize')))
 	shared.opts.add_option('randomize_hires_width', shared.OptionInfo('768,1920,64', 'Randomize Highres. Width', section=('randomize', 'Randomize')))
 	shared.opts.add_option('randomize_hires_height', shared.OptionInfo('768,1920,64', 'Randomize Highres. Height', section=('randomize', 'Randomize')))
+	shared.opts.add_option('randomize_other_CLIP_stop_at_last_layers', shared.OptionInfo('1,2,1', 'Randomize CLIP skip', section=('randomize', 'Randomize')))
 
 script_callbacks.on_ui_settings(on_ui_settings)
