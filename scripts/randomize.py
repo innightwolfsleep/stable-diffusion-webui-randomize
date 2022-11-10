@@ -25,7 +25,7 @@ class RandomizeScript(scripts.Script):
 							setattr(p, param_name, opt)
 					except TypeError:
 						print(f'Failed to randomize param `{param_name}` -- incorrect value?')
-			if random.random() < float(shared.opts.randomize_hires or None): # type: ignore
+			if random.random() < float(shared.opts.randomize_hires or 0): # type: ignore
 				try:
 					setattr(p, 'width', self._opt('width', p, 'randomize_hires_'))
 					setattr(p, 'height', self._opt('height', p, 'randomize_hires_'))
