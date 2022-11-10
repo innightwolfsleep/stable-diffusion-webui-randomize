@@ -36,7 +36,7 @@ class RandomizeScript(scripts.Script):
 					setattr(p, 'truncate_x', 0)
 					setattr(p, 'truncate_y', 0)
 
-					setattr(p, 'denoising_strength', float(self._opt('denoising_strength', p, 'randomize_hires_'))) # type: ignore
+					setattr(p, 'denoising_strength', self._opt('denoising_strength', p, prefix='randomize_hires_'))
 				except TypeError:
 					print(f'Failed to utilize highres. fix -- incorrect value?')
 		else:
@@ -46,7 +46,7 @@ class RandomizeScript(scripts.Script):
 		opt_name = f'{prefix}{opt}'
 		opt_val: str = getattr(shared.opts, opt_name)
 		opt_arr: list[str] = opt_val.split(',')
-		if opt_arr[0].isdigit():
+		if self._is_num(opt_arr[0]):
 			vals = [float(v) for v in opt_arr]
 			rand = self._rand(vals[0], vals[1], vals[2])
 			if rand.is_integer():
@@ -61,6 +61,16 @@ class RandomizeScript(scripts.Script):
 
 	def _rand(self, start: float, stop: float, step: float) -> float:
 		return random.randint(0, int((stop - start) / step)) * step + start
+	
+	def _is_num(self, val: str):
+		if val.isdigit():
+			return True
+		else:
+			try:
+				float(val)
+				return True
+			except ValueError:
+				return False
 
 def on_ui_settings():
 	shared.opts.add_option('randomize_enabled', shared.OptionInfo(False, 'Enable Randomize extension', section=('randomize', 'Randomize')))
