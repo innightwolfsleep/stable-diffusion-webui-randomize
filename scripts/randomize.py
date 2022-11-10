@@ -30,9 +30,9 @@ class RandomizeScript(scripts.Script):
 			# Other params
 			for param in self._list_params(all_opts, prefix='randomize_other_'):
 				if param == 'CLIP_stop_at_last_layers':
-					opts.data["CLIP_stop_at_last_layers"] = int(self._opt(param, p, prefix='randomize_other_')) # type: ignore
+					opts.data[param] = int(self._opt(param, p, prefix='randomize_other_')) # type: ignore
 
-			# Highres. fix param
+			# Highres. fix params
 			if random.random() < float(shared.opts.randomize_hires or 0): # type: ignore
 				try:
 					setattr(p, 'width', self._opt('width', p, 'randomize_hires_'))
