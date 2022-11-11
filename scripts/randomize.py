@@ -24,7 +24,9 @@ class RandomizeScript(scripts.Script):
 					opt = self._opt(param, p)
 					if opt is not None:
 						setattr(p, param, opt)
-				except TypeError:
+					else:
+						print(f'Skipping randomizing param `{param}` -- incorrect value')
+				except (TypeError, IndexError):
 					print(f'Failed to randomize param `{param}` -- incorrect value?')
 
 			# Other params
@@ -45,7 +47,7 @@ class RandomizeScript(scripts.Script):
 					setattr(p, 'truncate_y', 0)
 
 					setattr(p, 'denoising_strength', self._opt('denoising_strength', p, prefix='randomize_hires_'))
-				except TypeError:
+				except (TypeError, IndexError):
 					print(f'Failed to utilize highres. fix -- incorrect value?')
 		else:
 			return
@@ -70,7 +72,7 @@ class RandomizeScript(scripts.Script):
 			if opt == 'sampler_index':
 				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
 			else:
-				return random.choice(opt_arr)
+				return None
 
 	def _rand(self, start: float, stop: float, step: float) -> float:
 		return random.randint(0, int((stop - start) / step)) * step + start
