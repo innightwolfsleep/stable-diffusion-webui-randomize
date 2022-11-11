@@ -59,7 +59,7 @@ class RandomizeScript(scripts.Script):
 		opt_name = f'{prefix}{opt}'
 		opt_val: str = getattr(shared.opts, opt_name)
 		opt_arr: list[str] = [x.strip() for x in opt_val.split(',')]
-		if self._is_num(opt_arr[0]):
+		if self._is_num(opt_arr[0]) and len(opt_arr) == 3:
 			vals = [float(v) for v in opt_arr]
 			rand = self._rand(vals[0], vals[1], vals[2])
 			if rand.is_integer():
