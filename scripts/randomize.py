@@ -118,19 +118,22 @@ class RandomizeScript(scripts.Script):
 				return False
 
 	def _create_ui(self):
+		hint_minmax = 'Range of stepped values (min, max, step)'
+		hint_list = 'Comma separated list'
+
 		with gr.Group():
 			with gr.Accordion('Randomize', open=False):
 				randomize_enabled = gr.Checkbox(label='Enable', value=False)
-				randomize_param_seed = gr.Textbox(label='Seed', value='')
-				randomize_param_sampler_index = gr.Textbox(label='Sampler', value='')
-				randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='')
-				randomize_param_steps = gr.Textbox(label='Steps', value='')
-				randomize_param_width = gr.Textbox(label='Width', value='')
-				randomize_param_height = gr.Textbox(label='Height', value='')
-				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='0')
-				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='')
-				randomize_hires_width = gr.Textbox(label='Highres. Width', value='')
-				randomize_hires_height = gr.Textbox(label='Highres. Height', value='')
-				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='')
+				randomize_param_seed = gr.Textbox(label='Seed', value='', placeholder=hint_list)
+				randomize_param_sampler_index = gr.Textbox(label='Sampler', value='', placeholder=hint_list)
+				randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='', placeholder=hint_minmax)
+				randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax)
+				randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax)
+				randomize_param_height = gr.Textbox(label='Height', value='', placeholder=hint_minmax)
+				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='0', placeholder='Float value from 0 to 1')
+				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='', placeholder=hint_minmax)
+				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
+				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
+				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
 		
 		return randomize_enabled, randomize_param_seed, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers
