@@ -24,6 +24,7 @@ class RandomizeScript(scripts.Script):
 		self,
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
+		# randomize_param_seed: str,
 		randomize_param_sampler_index: str,
 		randomize_param_cfg_scale: str,
 		randomize_param_steps: str,
@@ -51,8 +52,8 @@ class RandomizeScript(scripts.Script):
 							setattr(p, param, opt)
 					else:
 						print(f'Skipping randomizing param `{param}` -- incorrect value')
-				except (TypeError, IndexError):
-					print(f'Failed to randomize param `{param}` -- incorrect value?')
+				except (TypeError, IndexError) as exception:
+					print(f'Failed to randomize param `{param}` -- incorrect value?', exception)
 
 			# Other params
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
@@ -64,16 +65,15 @@ class RandomizeScript(scripts.Script):
 				try:
 					setattr(p, 'width', self._opt({'width': randomize_hires_width}, p))
 					setattr(p, 'height', self._opt({'height': randomize_hires_height}, p))
-
-					setattr(p, 'enable_hr', True)
 					setattr(p, 'firstphase_width', 0)
 					setattr(p, 'firstphase_height', 0)
-					setattr(p, 'truncate_x', 0)
-					setattr(p, 'truncate_y', 0)
-
+					setattr(p, 'enable_hr', True)
 					setattr(p, 'denoising_strength', self._opt({'denoising_strength': randomize_hires_denoising_strength}, p))
-				except (TypeError, IndexError):
-					print(f'Failed to utilize highres. fix -- incorrect value?')
+
+					# Set up highres. fix related stuff by re-running init function
+					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
+				except (TypeError, IndexError) as exception:
+					print(f'Failed to utilize highres. fix -- incorrect value?', exception)
 		else:
 			return
 
