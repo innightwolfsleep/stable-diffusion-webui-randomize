@@ -12,17 +12,19 @@ class RandomizeScript(scripts.Script):
 		return 'Randomize'
 
 	def show(self, is_img2img):
-		return scripts.AlwaysVisible
+		if not is_img2img:
+			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers = self._create_ui()
+		randomize_enabled, randomize_param_seed, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers]
+		return [randomize_enabled, randomize_param_seed, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers]
 
 	def process(
 		self,
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
+		randomize_param_seed: str,
 		randomize_param_sampler_index: str,
 		randomize_param_cfg_scale: str,
 		randomize_param_steps: str,
@@ -43,7 +45,10 @@ class RandomizeScript(scripts.Script):
 				try:
 					opt = self._opt({param: val}, p)
 					if opt is not None:
-						setattr(p, param, opt)
+						if param in ['seed']:
+							setattr(p, 'all_seeds', [opt]) # NOTE (mmaker): Is this correct?
+						else:
+							setattr(p, param, opt)
 					else:
 						print(f'Skipping randomizing param `{param}` -- incorrect value')
 				except (TypeError, IndexError):
@@ -74,7 +79,7 @@ class RandomizeScript(scripts.Script):
 
 	def _list_params(self, opts, prefix='randomize_param_'):
 		for k, v in opts.items():
-			if k.startswith(prefix):
+			if k.startswith(prefix) and v is not None and len(v) > 0:
 				yield k.replace(prefix,''), v
 
 	def _opt(self, opt, p):
@@ -83,7 +88,7 @@ class RandomizeScript(scripts.Script):
 
 		opt_arr: list[str] = [x.strip() for x in opt_val.split(',')]
 
-		if self._is_num(opt_arr[0]) and len(opt_arr) == 3:
+		if self._is_num(opt_arr[0]) and len(opt_arr) == 3 and opt_name not in ['seed']:
 			vals = [float(v) for v in opt_arr]
 			rand = self._rand(vals[0], vals[1], vals[2])
 			if rand.is_integer():
@@ -93,6 +98,8 @@ class RandomizeScript(scripts.Script):
 		else:
 			if opt_name == 'sampler_index':
 				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
+			elif opt_name == 'seed':
+				return int(random.choice(opt_arr))
 			else:
 				return None
 
@@ -113,15 +120,16 @@ class RandomizeScript(scripts.Script):
 		with gr.Group():
 			with gr.Accordion('Randomize', open=False):
 				randomize_enabled = gr.Checkbox(label='Enable', value=False)
-				randomize_param_sampler_index = gr.Textbox(label='Sampler', value='euler a, euler')
-				randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='5, 15, 0.5')
-				randomize_param_steps = gr.Textbox(label='Steps', value='10, 50, 2')
-				randomize_param_width = gr.Textbox(label='Width', value='256, 768, 64')
-				randomize_param_height = gr.Textbox(label='Height', value='256, 768, 64')
-				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='0.25')
-				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='0.5, 0.8, 0.05')
-				randomize_hires_width = gr.Textbox(label='Highres. Width', value='768, 1920, 64')
-				randomize_hires_height = gr.Textbox(label='Highres. Height', value='768, 1920, 64')
-				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='1, 2, 1')
+				randomize_param_seed = gr.Textbox(label='Seed', value='')
+				randomize_param_sampler_index = gr.Textbox(label='Sampler', value='')
+				randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='')
+				randomize_param_steps = gr.Textbox(label='Steps', value='')
+				randomize_param_width = gr.Textbox(label='Width', value='')
+				randomize_param_height = gr.Textbox(label='Height', value='')
+				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='0')
+				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='')
+				randomize_hires_width = gr.Textbox(label='Highres. Width', value='')
+				randomize_hires_height = gr.Textbox(label='Highres. Height', value='')
+				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='')
 		
-		return randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers
+		return randomize_enabled, randomize_param_seed, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers
