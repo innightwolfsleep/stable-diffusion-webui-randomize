@@ -24,7 +24,6 @@ class RandomizeScript(scripts.Script):
 		self,
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
-		randomize_param_seed: str,
 		randomize_param_sampler_index: str,
 		randomize_param_cfg_scale: str,
 		randomize_param_steps: str,
