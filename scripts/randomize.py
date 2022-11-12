@@ -20,7 +20,7 @@ class RandomizeScript(scripts.Script):
 
 		return [randomize_enabled, randomize_param_seed, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers]
 
-	def process(
+	def process_batch(
 		self,
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
@@ -35,10 +35,11 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_width: str,
 		randomize_hires_height: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
+		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
 			# TODO (mmaker): Fix this jank. Don't do this.
-			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled']}
+			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
 
 			# Base params
 			for param, val in self._list_params(all_opts):
@@ -46,7 +47,7 @@ class RandomizeScript(scripts.Script):
 					opt = self._opt({param: val}, p)
 					if opt is not None:
 						if param in ['seed']:
-							setattr(p, 'all_seeds', [opt]) # NOTE (mmaker): Is this correct?
+							setattr(p, 'all_seeds', [self._opt({param: val}, p) for _ in range(0, len(getattr(p, 'all_seeds')))]) # NOTE (mmaker): Is this correct?
 						else:
 							setattr(p, param, opt)
 					else:
