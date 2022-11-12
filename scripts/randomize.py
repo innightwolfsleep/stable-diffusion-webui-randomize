@@ -63,12 +63,12 @@ class RandomizeScript(scripts.Script):
 			# Highres. fix params
 			if random.random() < float(randomize_hires or 0):
 				try:
-					setattr(p, 'width', self._opt({'width': randomize_hires_width}, p))
-					setattr(p, 'height', self._opt({'height': randomize_hires_height}, p))
+					setattr(p, 'enable_hr', True)
 					setattr(p, 'firstphase_width', 0)
 					setattr(p, 'firstphase_height', 0)
-					setattr(p, 'enable_hr', True)
 					setattr(p, 'denoising_strength', self._opt({'denoising_strength': randomize_hires_denoising_strength}, p))
+					setattr(p, 'width', self._opt({'width': randomize_hires_width}, p))
+					setattr(p, 'height', self._opt({'height': randomize_hires_height}, p))
 
 					# Set up highres. fix related stuff by re-running init function
 					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
