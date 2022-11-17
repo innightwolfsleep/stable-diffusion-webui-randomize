@@ -1,7 +1,7 @@
 import random
 import gradio as gr
 
-from modules import scripts
+from modules import scripts, sd_models, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
 from modules.shared import opts
@@ -16,9 +16,9 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers = self._create_ui()
+		randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers]
+		return [randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint]
 
 	def process_batch(
 		self,
@@ -35,6 +35,7 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_width: str,
 		randomize_hires_height: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
+		randomize_other_sd_model_checkpoint: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -59,6 +60,11 @@ class RandomizeScript(scripts.Script):
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
 				if param == 'CLIP_stop_at_last_layers':
 					opts.data[param] = int(self._opt({param: val}, p)) # type: ignore
+				if param == 'sd_model_checkpoint':
+					sd_model_checkpoint = self._opt({param: val}, p)
+					if sd_model_checkpoint:
+						sd_models.reload_model_weights(shared.sd_model, sd_model_checkpoint)
+						p.sd_model = shared.sd_model
 
 			# Highres. fix params
 			if random.random() < float(randomize_hires or 0):
@@ -100,6 +106,8 @@ class RandomizeScript(scripts.Script):
 				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
 			elif opt_name == 'seed':
 				return int(random.choice(opt_arr))
+			elif opt_name == 'sd_model_checkpoint':
+				return sd_models.get_closet_checkpoint_match(random.choice(opt_arr))
 			else:
 				return None
 
@@ -134,5 +142,6 @@ class RandomizeScript(scripts.Script):
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
+				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder=hint_list)
 		
-		return randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers
+		return randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
