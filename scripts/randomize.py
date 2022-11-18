@@ -162,6 +162,6 @@ class RandomizeScript(scripts.Script):
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
-				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder=hint_list)
+				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word')
 		
 		return randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
