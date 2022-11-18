@@ -25,6 +25,43 @@ class RandomizeScript(scripts.Script):
 
 		return [randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint]
 
+	def process(
+		self,
+		p: StableDiffusionProcessing,
+		randomize_enabled: bool,
+		# randomize_param_seed: str,
+		randomize_param_sampler_index: str,
+		randomize_param_cfg_scale: str,
+		randomize_param_steps: str,
+		randomize_param_width: str,
+		randomize_param_height: str,
+		randomize_hires: str,
+		randomize_hires_denoising_strength: str,
+		randomize_hires_width: str,
+		randomize_hires_height: str,
+		randomize_other_CLIP_stop_at_last_layers: str,
+		randomize_other_sd_model_checkpoint: str,
+		**kwargs
+	):
+		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
+			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
+
+			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
+				if param == 'sd_model_checkpoint':
+					# TODO (mmaker): Trigger changing the ckpt dropdown value in the UI
+					sd_model_checkpoint = self._opt({param: val}, p)
+					if sd_model_checkpoint:
+						sd_models.reload_model_weights(shared.sd_model, sd_model_checkpoint)
+						p.sd_model = shared.sd_model
+
+			# Checkpoint specific
+			# TODO (mmaker): Allow for some way to format how this is inserted into the prompt
+			if len(self.randomize_prompt_word) > 0:
+				p.prompt = self.randomize_prompt_word + ', ' + p.prompt
+				if p.all_prompts and len(p.all_prompts) > 0:
+					p.all_prompts = [self.randomize_prompt_word + ', ' + prompt for prompt in p.all_prompts] # type: ignore
+
+
 	def process_batch(
 		self,
 		p: StableDiffusionProcessing,
@@ -65,12 +102,6 @@ class RandomizeScript(scripts.Script):
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
 				if param == 'CLIP_stop_at_last_layers':
 					opts.data[param] = int(self._opt({param: val}, p)) # type: ignore
-				if param == 'sd_model_checkpoint':
-					# TODO (mmaker): Trigger changing the ckpt dropdown value in the UI
-					sd_model_checkpoint = self._opt({param: val}, p)
-					if sd_model_checkpoint:
-						sd_models.reload_model_weights(shared.sd_model, sd_model_checkpoint)
-						p.sd_model = shared.sd_model
 
 			# Highres. fix params
 			if random.random() < float(randomize_hires or 0):
@@ -86,13 +117,6 @@ class RandomizeScript(scripts.Script):
 					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
 				except (TypeError, IndexError) as exception:
 					print(f'Failed to utilize highres. fix -- incorrect value?', exception)
-
-			# Checkpoint specific
-			# TODO (mmaker): Allow for some way to format how this is inserted into the prompt
-			if len(self.randomize_prompt_word) > 0:
-				p.prompt = self.randomize_prompt_word + ', ' + p.prompt
-				if p.all_prompts and len(p.all_prompts) > 0:
-					p.all_prompts = [self.randomize_prompt_word + ', ' + prompt for prompt in p.all_prompts] # type: ignore
 		else:
 			return
 
