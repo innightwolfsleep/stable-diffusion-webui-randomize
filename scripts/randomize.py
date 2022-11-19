@@ -6,6 +6,7 @@ from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
 from modules.shared import opts
 from modules.sd_samplers import all_samplers_map
+from scripts.xy_grid import build_samplers_dict
 
 class RandomizeScript(scripts.Script):
 	def __init__(self) -> None:
@@ -87,6 +88,10 @@ class RandomizeScript(scripts.Script):
 			# Base params
 			for param, val in self._list_params(all_opts):
 				try:
+					# Backwards compat
+					if param == 'sampler_name' and hasattr(p, 'sampler_index') and not hasattr(p, 'sampler_name'):
+						param = 'sampler_index'
+
 					opt = self._opt({param: val}, p)
 					if opt is not None:
 						if param in ['seed']:
@@ -143,9 +148,11 @@ class RandomizeScript(scripts.Script):
 				random_sampler = random.choice(opt_arr)
 				if random_sampler in all_samplers_map:
 					return random_sampler
-			elif opt_name == 'seed':
+			if opt_name == 'sampler_index':
+				return build_samplers_dict().get(random.choice(opt_arr).lower(), None)
+			if opt_name == 'seed':
 				return int(random.choice(opt_arr))
-			elif opt_name == 'sd_model_checkpoint':
+			if opt_name == 'sd_model_checkpoint':
 				choice = random.choice(opt_arr)
 				if ':' in choice:
 					ckpt_name = choice.split(':')[0].strip()
@@ -154,8 +161,8 @@ class RandomizeScript(scripts.Script):
 					ckpt_name = choice
 					self.randomize_prompt_word = ''
 				return sd_models.get_closet_checkpoint_match(ckpt_name)
-			else:
-				return None
+			
+			return None
 
 	def _rand(self, start: float, stop: float, step: float) -> float:
 		return random.randint(0, int((stop - start) / step)) * step + start
