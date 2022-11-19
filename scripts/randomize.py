@@ -5,7 +5,7 @@ from modules import scripts, sd_models, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
 from modules.shared import opts
-from scripts.xy_grid import build_samplers_dict
+from modules.sd_samplers import all_samplers_map
 
 class RandomizeScript(scripts.Script):
 	def __init__(self) -> None:
@@ -21,16 +21,16 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint = self._create_ui()
+		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint]
+		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint]
 
 	def process(
 		self,
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
 		# randomize_param_seed: str,
-		randomize_param_sampler_index: str,
+		randomize_param_sampler_name: str,
 		randomize_param_cfg_scale: str,
 		randomize_param_steps: str,
 		randomize_param_width: str,
@@ -67,7 +67,7 @@ class RandomizeScript(scripts.Script):
 		p: StableDiffusionProcessing,
 		randomize_enabled: bool,
 		# randomize_param_seed: str,
-		randomize_param_sampler_index: str,
+		randomize_param_sampler_name: str,
 		randomize_param_cfg_scale: str,
 		randomize_param_steps: str,
 		randomize_param_width: str,
@@ -139,8 +139,10 @@ class RandomizeScript(scripts.Script):
 			else:
 				return round(float(rand), max(0, int(opt_arr[2][::-1].find('.'))))
 		else:
-			if opt_name == 'sampler_index':
-				return build_samplers_dict(p).get(random.choice(opt_arr).lower(), None)
+			if opt_name == 'sampler_name':
+				random_sampler = random.choice(opt_arr)
+				if random_sampler in all_samplers_map:
+					return random_sampler
 			elif opt_name == 'seed':
 				return int(random.choice(opt_arr))
 			elif opt_name == 'sd_model_checkpoint':
@@ -176,7 +178,7 @@ class RandomizeScript(scripts.Script):
 			with gr.Accordion('Randomize', open=False):
 				randomize_enabled = gr.Checkbox(label='Enable', value=False)
 				# randomize_param_seed = gr.Textbox(label='Seed', value='', placeholder=hint_list)
-				randomize_param_sampler_index = gr.Textbox(label='Sampler', value='', placeholder=hint_list)
+				randomize_param_sampler_name = gr.Textbox(label='Sampler', value='', placeholder=hint_list)
 				randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='', placeholder=hint_minmax)
 				randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax)
 				randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax)
@@ -188,4 +190,4 @@ class RandomizeScript(scripts.Script):
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
 				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word')
 		
-		return randomize_enabled, randomize_param_sampler_index, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
+		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
