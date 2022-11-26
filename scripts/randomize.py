@@ -5,6 +5,7 @@ from modules import scripts, sd_models, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
 from modules.shared import opts
+from modules.sd_models import checkpoints_list
 from modules.sd_samplers import all_samplers_map
 from scripts.xy_grid import build_samplers_dict
 
@@ -132,7 +133,7 @@ class RandomizeScript(scripts.Script):
 
 	def _opt(self, opt, p):
 		opt_name = list(opt.keys())[0]
-		opt_val = list(opt.values())[0]
+		opt_val = list(opt.values())[0].strip()
 
 		opt_arr: list[str] = [x.strip() for x in opt_val.split(',')]
 
@@ -145,14 +146,20 @@ class RandomizeScript(scripts.Script):
 				return round(float(rand), max(0, int(opt_arr[2][::-1].find('.'))))
 		else:
 			if opt_name == 'sampler_name':
+				if opt_val == '*':
+					return random.choice(list(all_samplers_map.keys()))
 				random_sampler = random.choice(opt_arr)
 				if random_sampler in all_samplers_map:
 					return random_sampler
 			if opt_name == 'sampler_index':
+				if opt_val == '*':
+					return random.choice(list(build_samplers_dict().values()))
 				return build_samplers_dict().get(random.choice(opt_arr).lower(), None)
 			if opt_name == 'seed':
 				return int(random.choice(opt_arr))
 			if opt_name == 'sd_model_checkpoint':
+				if opt_val == '*':
+					return random.choice(list(checkpoints_list.values()))
 				choice = random.choice(opt_arr)
 				if ':' in choice:
 					ckpt_name = choice.split(':')[0].strip()
@@ -179,7 +186,7 @@ class RandomizeScript(scripts.Script):
 
 	def _create_ui(self):
 		hint_minmax = 'Range of stepped values (min, max, step)'
-		hint_list = 'Comma separated list'
+		hint_list = 'Comma separated list OR * for all'
 
 		with gr.Group():
 			with gr.Accordion('Randomize', open=False):
@@ -195,6 +202,6 @@ class RandomizeScript(scripts.Script):
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
-				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word')
+				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
 		
 		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
