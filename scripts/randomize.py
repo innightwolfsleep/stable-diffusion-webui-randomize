@@ -7,7 +7,13 @@ from modules.processing import (StableDiffusionProcessing,
 from modules.shared import opts
 from modules.sd_models import checkpoints_list
 from modules.sd_samplers import all_samplers_map
-from scripts.xy_grid import build_samplers_dict
+
+try:
+	from scripts.xy_grid import build_samplers_dict
+except ImportError:
+	def build_samplers_dict():
+		return {}
+
 
 class RandomizeScript(scripts.Script):
 	def __init__(self) -> None:
@@ -152,9 +158,13 @@ class RandomizeScript(scripts.Script):
 				if random_sampler in all_samplers_map:
 					return random_sampler
 			if opt_name == 'sampler_index':
-				if opt_val == '*':
-					return random.choice(list(build_samplers_dict().values()))
-				return build_samplers_dict().get(random.choice(opt_arr).lower(), None)
+				samplers_dict = build_samplers_dict()
+				if len(samplers_dict) > 0:
+					if opt_val == '*':
+						return random.choice(list(samplers_dict.values()))
+					return samplers_dict.get(random.choice(opt_arr).lower(), None)
+				else:
+					return None
 			if opt_name == 'seed':
 				return int(random.choice(opt_arr))
 			if opt_name == 'sd_model_checkpoint':
