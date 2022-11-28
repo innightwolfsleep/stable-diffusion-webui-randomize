@@ -121,9 +121,20 @@ class RandomizeScript(scripts.Script):
 					setattr(p, 'enable_hr', True)
 					setattr(p, 'firstphase_width', 0)
 					setattr(p, 'firstphase_height', 0)
-					setattr(p, 'denoising_strength', self._opt({'denoising_strength': randomize_hires_denoising_strength}, p))
-					setattr(p, 'width', self._opt({'width': randomize_hires_width}, p))
-					setattr(p, 'height', self._opt({'height': randomize_hires_height}, p))
+
+					denoising_strength = self._opt({'denoising_strength': randomize_hires_denoising_strength}, p)
+					if denoising_strength:
+						setattr(p, 'denoising_strength', denoising_strength)
+					else:
+						# Default value used by WebUI
+						setattr(p, 'denoising_strength', 0.7)
+
+					hires_width = self._opt({'width': randomize_hires_width}, p)
+					hires_height = self._opt({'height': randomize_hires_height}, p)
+					if hires_width:
+						setattr(p, 'width', hires_width)
+					if hires_height:
+						setattr(p, 'height', hires_height)
 
 					# Set up highres. fix related stuff by re-running init function
 					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
