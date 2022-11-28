@@ -203,9 +203,7 @@ class RandomizeScript(scripts.Script):
 					return None
 				if opt_val == '*':
 					return random.choice(list(hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir).keys()))
-				name = hypernetwork.find_closest_hypernetwork_name(random.choice(opt_arr))
-				if name:
-					return name
+				return hypernetwork.find_closest_hypernetwork_name(random.choice(opt_arr))
 			
 			return None
 
