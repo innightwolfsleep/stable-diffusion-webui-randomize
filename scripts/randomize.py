@@ -4,9 +4,10 @@ import gradio as gr
 from modules import scripts, sd_models, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
-from modules.shared import opts
+from modules.shared import opts, cmd_opts
 from modules.sd_models import checkpoints_list
 from modules.sd_samplers import all_samplers_map
+from modules.hypernetworks import hypernetwork
 
 try:
 	from scripts.xy_grid import build_samplers_dict # type: ignore
@@ -29,9 +30,9 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint = self._create_ui()
+		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint]
+		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength]
 
 	def process(
 		self,
@@ -49,18 +50,24 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_height: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
 		randomize_other_sd_model_checkpoint: str,
+		randomize_other_sd_hypernetwork: str,
+		randomize_other_sd_hypernetwork_strength: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
 			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
 
+			# NOTE (mmaker): Can we update these in the UI?
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
 				if param == 'sd_model_checkpoint':
-					# TODO (mmaker): Trigger changing the ckpt dropdown value in the UI
 					sd_model_checkpoint = self._opt({param: val}, p)
 					if sd_model_checkpoint:
 						sd_models.reload_model_weights(shared.sd_model, sd_model_checkpoint)
 						p.sd_model = shared.sd_model
+				if param == 'sd_hypernetwork':
+					hypernetwork.load_hypernetwork(self._opt({param: val}, p))
+				if param == 'sd_hypernetwork_strength':
+					hypernetwork.apply_strength(self._opt({param: val}, p))
 
 			# Checkpoint specific
 			# TODO (mmaker): Allow for some way to format how this is inserted into the prompt
@@ -86,6 +93,8 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_height: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
 		randomize_other_sd_model_checkpoint: str,
+		randomize_other_sd_hypernetwork: str,
+		randomize_other_sd_hypernetwork_strength: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -189,6 +198,14 @@ class RandomizeScript(scripts.Script):
 					ckpt_name = choice
 					self.randomize_prompt_word = ''
 				return sd_models.get_closet_checkpoint_match(ckpt_name)
+			if opt_name == 'sd_hypernetwork':
+				if opt_val.lower() == 'none':
+					return None
+				if opt_val == '*':
+					return random.choice(list(hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir).keys()))
+				name = hypernetwork.find_closest_hypernetwork_name(random.choice(opt_arr))
+				if name:
+					return name
 			
 			return None
 
@@ -208,6 +225,7 @@ class RandomizeScript(scripts.Script):
 	def _create_ui(self):
 		hint_minmax = 'Range of stepped values (min, max, step)'
 		hint_list = 'Comma separated list OR * for all'
+		hint_float = 'Float value from 0 to 1'
 
 		with gr.Group():
 			with gr.Accordion('Randomize', open=False):
@@ -218,11 +236,13 @@ class RandomizeScript(scripts.Script):
 				randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax)
 				randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax)
 				randomize_param_height = gr.Textbox(label='Height', value='', placeholder=hint_minmax)
-				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='', placeholder='Float value from 0 to 1')
+				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='', placeholder=hint_float)
 				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='', placeholder=hint_minmax)
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
 				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
+				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
+				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_float)
 		
-		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint
+		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength
