@@ -30,9 +30,9 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength = self._create_ui()
+		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength]
+		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta]
 
 	def process(
 		self,
@@ -52,6 +52,7 @@ class RandomizeScript(scripts.Script):
 		randomize_other_sd_model_checkpoint: str,
 		randomize_other_sd_hypernetwork: str,
 		randomize_other_sd_hypernetwork_strength: str,
+		randomize_other_eta_noise_seed_delta: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -95,6 +96,7 @@ class RandomizeScript(scripts.Script):
 		randomize_other_sd_model_checkpoint: str,
 		randomize_other_sd_hypernetwork: str,
 		randomize_other_sd_hypernetwork_strength: str,
+		randomize_other_eta_noise_seed_delta: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -121,8 +123,8 @@ class RandomizeScript(scripts.Script):
 
 			# Other params
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
-				if param == 'CLIP_stop_at_last_layers':
-					opts.data[param] = int(self._opt({param: val}, p)) # type: ignore
+				if param in ['CLIP_stop_at_last_layers', 'eta_noise_seed_delta']:
+					opts.data[param] = self._opt({param: val}, p) # type: ignore
 
 			# Highres. fix params
 			if random.random() < float(randomize_hires or 0):
@@ -242,5 +244,6 @@ class RandomizeScript(scripts.Script):
 				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
 				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
 				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_float)
+				randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='', placeholder=hint_minmax)
 		
-		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength
+		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta
