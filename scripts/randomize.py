@@ -243,7 +243,7 @@ class RandomizeScript(scripts.Script):
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
 				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
 				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
-				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_float)
+				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_minmax)
 				randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='', placeholder=hint_minmax)
 		
 		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta
