@@ -218,7 +218,7 @@ class RandomizeScript(scripts.Script):
 				randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax)
 				randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax)
 				randomize_param_height = gr.Textbox(label='Height', value='', placeholder=hint_minmax)
-				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='0', placeholder='Float value from 0 to 1')
+				randomize_hires = gr.Textbox(label='Highres. percentage chance', value='', placeholder='Float value from 0 to 1')
 				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='', placeholder=hint_minmax)
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
