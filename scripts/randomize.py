@@ -9,7 +9,7 @@ from modules.sd_models import checkpoints_list
 from modules.sd_samplers import all_samplers_map
 
 try:
-	from scripts.xy_grid import build_samplers_dict
+	from scripts.xy_grid import build_samplers_dict # type: ignore
 except ImportError:
 	def build_samplers_dict():
 		return {}
