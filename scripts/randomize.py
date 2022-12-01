@@ -1,10 +1,11 @@
+import math
 import random
 import gradio as gr
 
 from modules import scripts, sd_models, shared
 from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
-from modules.shared import opts, cmd_opts
+from modules.shared import opts, cmd_opts, state
 from modules.sd_models import checkpoints_list
 from modules.sd_samplers import all_samplers_map
 from modules.hypernetworks import hypernetwork
@@ -163,11 +164,15 @@ class RandomizeScript(scripts.Script):
 
 						# Set up highres. fix related stuff by re-running init function
 						p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
+						# Fix job count
+						state.job_count = math.floor(state.job_count / 2)
 					except (TypeError, IndexError) as exception:
 						print(f'Failed to utilize highres. fix -- incorrect value?', exception)
 				else:
 					setattr(p, 'enable_hr', False)
 					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
+					# Fix job count
+					state.job_count = math.floor(state.job_count / 2)
 		else:
 			return
 
