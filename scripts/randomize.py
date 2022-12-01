@@ -57,10 +57,10 @@ class RandomizeScript(scripts.Script):
 		randomize_other_styles: str,
 		**kwargs
 	):
-		self.hypernetwork = opts.sd_hypernetwork
-		self.hypernetwork_strength = opts.sd_hypernetwork_strength
-
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
+			self.hypernetwork = opts.sd_hypernetwork
+			self.hypernetwork_strength = opts.sd_hypernetwork_strength
+			
 			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
 
 			# NOTE (mmaker): Can we update these in the UI?
@@ -109,11 +109,10 @@ class RandomizeScript(scripts.Script):
 		randomize_other_styles: str,
 		**kwargs
 	):
-		self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
-		self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
-		self.eta_noise_seed_delta = opts.eta_noise_seed_delta
-		
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
+			self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
+			self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
+			self.eta_noise_seed_delta = opts.eta_noise_seed_delta
 			# TODO (mmaker): Fix this jank. Don't do this.
 			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
 
@@ -169,12 +168,13 @@ class RandomizeScript(scripts.Script):
 			return
 
 	def postprocess(self, p, processed, *args):
-		hypernetwork.load_hypernetwork(self.hypernetwork)
-		hypernetwork.apply_strength(self.hypernetwork_strength)
+		if isinstance(p, StableDiffusionProcessingTxt2Img):
+			hypernetwork.load_hypernetwork(self.hypernetwork)
+			hypernetwork.apply_strength(self.hypernetwork_strength)
 
-		opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers # type: ignore
-		opts.data["use_scale_latent_for_hires_fix"] = self.use_scale_latent_for_hires_fix # type: ignore
-		opts.data["eta_noise_seed_delta"] = self.eta_noise_seed_delta # type: ignore
+			opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers # type: ignore
+			opts.data["use_scale_latent_for_hires_fix"] = self.use_scale_latent_for_hires_fix # type: ignore
+			opts.data["eta_noise_seed_delta"] = self.eta_noise_seed_delta # type: ignore
 
 	def _list_params(self, opts, prefix='randomize_param_'):
 		for k, v in opts.items():
