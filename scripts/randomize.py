@@ -167,6 +167,7 @@ class RandomizeScript(scripts.Script):
 						print(f'Failed to utilize highres. fix -- incorrect value?', exception)
 				else:
 					setattr(p, 'enable_hr', False)
+					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
 		else:
 			return
 
