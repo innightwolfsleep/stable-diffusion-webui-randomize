@@ -21,6 +21,11 @@ class RandomizeScript(scripts.Script):
 		super().__init__()
 
 		self.randomize_prompt_word = ''
+		self.hypernetwork = opts.sd_hypernetwork
+		self.hypernetwork_strength = opts.sd_hypernetwork_strength
+		self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
+		self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
+		self.eta_noise_seed_delta = opts.eta_noise_seed_delta
 
 	def title(self):
 		return 'Randomize'
@@ -160,6 +165,14 @@ class RandomizeScript(scripts.Script):
 					print(f'Failed to utilize highres. fix -- incorrect value?', exception)
 		else:
 			return
+
+	def postprocess(self, p, processed, *args):
+		hypernetwork.load_hypernetwork(self.hypernetwork)
+		hypernetwork.apply_strength(self.hypernetwork_strength)
+
+		opts.data["CLIP_stop_at_last_layers"] = self.CLIP_stop_at_last_layers # type: ignore
+		opts.data["use_scale_latent_for_hires_fix"] = self.use_scale_latent_for_hires_fix # type: ignore
+		opts.data["eta_noise_seed_delta"] = self.eta_noise_seed_delta # type: ignore
 
 	def _list_params(self, opts, prefix='randomize_param_'):
 		for k, v in opts.items():
