@@ -75,6 +75,7 @@ class RandomizeScript(scripts.Script):
 					hypernetwork.load_hypernetwork(self._opt({param: val}, p))
 				if param == 'sd_hypernetwork_strength':
 					hypernetwork.apply_strength(self._opt({param: val}, p))
+					opts.data[param] = self._opt({param: val}, p) # type: ignore
 				if param == 'styles':
 					p.styles = self._opt({param: val}, p) # type: ignore
 					self._apply_styles(p)
