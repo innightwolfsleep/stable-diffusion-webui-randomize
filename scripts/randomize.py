@@ -30,9 +30,9 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles = self._create_ui()
+		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_use_scale_latent_for_hires_fix, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles]
+		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_use_scale_latent_for_hires_fix, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles]
 
 	def process(
 		self,
@@ -48,6 +48,7 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_denoising_strength: str,
 		randomize_hires_width: str,
 		randomize_hires_height: str,
+		randomize_other_use_scale_latent_for_hires_fix: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
 		randomize_other_sd_model_checkpoint: str,
 		randomize_other_sd_hypernetwork: str,
@@ -96,6 +97,7 @@ class RandomizeScript(scripts.Script):
 		randomize_hires_denoising_strength: str,
 		randomize_hires_width: str,
 		randomize_hires_height: str,
+		randomize_other_use_scale_latent_for_hires_fix: str,
 		randomize_other_CLIP_stop_at_last_layers: str,
 		randomize_other_sd_model_checkpoint: str,
 		randomize_other_sd_hypernetwork: str,
@@ -128,7 +130,7 @@ class RandomizeScript(scripts.Script):
 
 			# Other params
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
-				if param in ['CLIP_stop_at_last_layers', 'eta_noise_seed_delta']:
+				if param in ['CLIP_stop_at_last_layers', 'eta_noise_seed_delta', 'use_scale_latent_for_hires_fix']:
 					opts.data[param] = self._opt({param: val}, p) # type: ignore
 
 			# Highres. fix params
@@ -170,7 +172,7 @@ class RandomizeScript(scripts.Script):
 
 		opt_arr: list[str] = [x.strip() for x in opt_val.split(',')]
 
-		if self._is_num(opt_arr[0]) and len(opt_arr) == 3 and opt_name not in ['seed']:
+		if self._is_num(opt_arr[0]) and len(opt_arr) == 3 and opt_name not in ['seed', 'use_scale_latent_for_hires_fix']:
 			vals = [float(v) for v in opt_arr]
 			rand = self._rand(vals[0], vals[1], vals[2])
 			if rand.is_integer():
@@ -215,6 +217,10 @@ class RandomizeScript(scripts.Script):
 				if opt_val == '*':
 					return [random.choice([k for k, v in shared.prompt_styles.styles.items()])]
 				return [random.choice(opt_arr)]
+			if opt_name == 'use_scale_latent_for_hires_fix':
+				if opt_val == '*':
+					return random.choice([0,1])
+				return int(random.choice(opt_arr))
 			
 			return None
 
@@ -263,6 +269,7 @@ class RandomizeScript(scripts.Script):
 				randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='', placeholder=hint_minmax)
 				randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
+				randomize_other_use_scale_latent_for_hires_fix = gr.Textbox(label='Upscale latent space for highres. fix', value='', placeholder=hint_list)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
 				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
 				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
@@ -270,4 +277,4 @@ class RandomizeScript(scripts.Script):
 				randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='', placeholder=hint_minmax)
 				randomize_other_styles = gr.Textbox(label='Styles', value='', placeholder=hint_list)
 		
-		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles
+		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_use_scale_latent_for_hires_fix, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles
