@@ -21,11 +21,6 @@ class RandomizeScript(scripts.Script):
 		super().__init__()
 
 		self.randomize_prompt_word = ''
-		self.hypernetwork = opts.sd_hypernetwork
-		self.hypernetwork_strength = opts.sd_hypernetwork_strength
-		self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
-		self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
-		self.eta_noise_seed_delta = opts.eta_noise_seed_delta
 
 	def title(self):
 		return 'Randomize'
@@ -62,6 +57,9 @@ class RandomizeScript(scripts.Script):
 		randomize_other_styles: str,
 		**kwargs
 	):
+		self.hypernetwork = opts.sd_hypernetwork
+		self.hypernetwork_strength = opts.sd_hypernetwork_strength
+
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
 			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
 
@@ -111,6 +109,10 @@ class RandomizeScript(scripts.Script):
 		randomize_other_styles: str,
 		**kwargs
 	):
+		self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
+		self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
+		self.eta_noise_seed_delta = opts.eta_noise_seed_delta
+		
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
 			# TODO (mmaker): Fix this jank. Don't do this.
 			all_opts = {k: v for k, v in locals().items() if k not in ['self', 'p', 'randomize_enabled', 'batch_number', 'prompts', 'seeds', 'subseeds']}
