@@ -30,9 +30,9 @@ class RandomizeScript(scripts.Script):
 			return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta = self._create_ui()
+		randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles = self._create_ui()
 
-		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta]
+		return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles]
 
 	def process(
 		self,
@@ -53,6 +53,7 @@ class RandomizeScript(scripts.Script):
 		randomize_other_sd_hypernetwork: str,
 		randomize_other_sd_hypernetwork_strength: str,
 		randomize_other_eta_noise_seed_delta: str,
+		randomize_other_styles: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -69,6 +70,9 @@ class RandomizeScript(scripts.Script):
 					hypernetwork.load_hypernetwork(self._opt({param: val}, p))
 				if param == 'sd_hypernetwork_strength':
 					hypernetwork.apply_strength(self._opt({param: val}, p))
+				if param == 'styles':
+					p.styles = self._opt({param: val}, p) # type: ignore
+					self._apply_styles(p)
 
 			# Checkpoint specific
 			# TODO (mmaker): Allow for some way to format how this is inserted into the prompt
@@ -97,6 +101,7 @@ class RandomizeScript(scripts.Script):
 		randomize_other_sd_hypernetwork: str,
 		randomize_other_sd_hypernetwork_strength: str,
 		randomize_other_eta_noise_seed_delta: str,
+		randomize_other_styles: str,
 		**kwargs
 	):
 		if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
@@ -206,6 +211,10 @@ class RandomizeScript(scripts.Script):
 				if opt_val == '*':
 					return random.choice(list(hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir).keys()))
 				return hypernetwork.find_closest_hypernetwork_name(random.choice(opt_arr))
+			if opt_name == 'styles':
+				if opt_val == '*':
+					return [random.choice([k for k, v in shared.prompt_styles.styles.items()])]
+				return [random.choice(opt_arr)]
 			
 			return None
 
@@ -221,6 +230,20 @@ class RandomizeScript(scripts.Script):
 				return True
 			except ValueError:
 				return False
+
+	def _apply_styles(self, p: StableDiffusionProcessing):
+		# Copy-pasted code from processing.py
+		# Not at all smart but there's no way to run this again cleanly currently
+		# Needs to be ran again since normally, this is ran *before* scripts
+		if type(p.prompt) == list:
+			p.all_prompts = [shared.prompt_styles.apply_styles_to_prompt(x, p.styles) for x in p.prompt]
+		else:
+			p.all_prompts = p.batch_size * p.n_iter * [shared.prompt_styles.apply_styles_to_prompt(p.prompt, p.styles)]
+
+		if type(p.negative_prompt) == list:
+			p.all_negative_prompts = [shared.prompt_styles.apply_negative_styles_to_prompt(x, p.styles) for x in p.negative_prompt]
+		else:
+			p.all_negative_prompts = p.batch_size * p.n_iter * [shared.prompt_styles.apply_negative_styles_to_prompt(p.negative_prompt, p.styles)]
 
 	def _create_ui(self):
 		hint_minmax = 'Range of stepped values (min, max, step)'
@@ -245,5 +268,6 @@ class RandomizeScript(scripts.Script):
 				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
 				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_minmax)
 				randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='', placeholder=hint_minmax)
+				randomize_other_styles = gr.Textbox(label='Styles', value='', placeholder=hint_list)
 		
-		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta
+		return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_sd_hypernetwork, randomize_other_sd_hypernetwork_strength, randomize_other_eta_noise_seed_delta, randomize_other_styles
