@@ -243,7 +243,7 @@ class RandomizeScript(scripts.Script):
 				return hypernetwork.find_closest_hypernetwork_name(random.choice(opt_arr))
 			if opt_name == 'styles':
 				if opt_val == '*':
-					return [random.choice([k for k, v in shared.prompt_styles.styles.items()])]
+					return [random.choice([k for k, v in shared.prompt_styles.styles.items() if k != 'None'])]
 				return [random.choice(opt_arr)]
 			if opt_name == 'use_scale_latent_for_hires_fix':
 				if opt_val == '*':
