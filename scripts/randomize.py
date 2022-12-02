@@ -7,7 +7,7 @@ from modules.processing import (StableDiffusionProcessing,
                                 StableDiffusionProcessingTxt2Img)
 from modules.shared import opts, cmd_opts, state
 from modules.sd_models import checkpoints_list
-from modules.sd_samplers import all_samplers_map
+from modules.sd_samplers import all_samplers_map, samplers
 from modules.hypernetworks import hypernetwork
 
 try:
@@ -210,7 +210,7 @@ class RandomizeScript(scripts.Script):
 		else:
 			if opt_name == 'sampler_name':
 				if opt_val == '*':
-					return random.choice(list(all_samplers_map.keys()))
+					return random.choice([s.name for s in samplers])
 				random_sampler = random.choice(opt_arr)
 				if random_sampler in all_samplers_map:
 					return random_sampler
