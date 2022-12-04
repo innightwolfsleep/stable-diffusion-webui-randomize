@@ -143,6 +143,9 @@ class RandomizeScript(scripts.Script):
 
 			# Highres. fix params
 			if len(randomize_hires.strip()) > 0:
+				fix_job_count = False
+				if p.enable_hr:
+					fix_job_count = True
 				if random.random() < float(randomize_hires or 0):
 					try:
 						setattr(p, 'enable_hr', True)
@@ -165,15 +168,15 @@ class RandomizeScript(scripts.Script):
 
 						# Set up highres. fix related stuff by re-running init function
 						p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
-						# Fix job count
-						state.job_count = math.floor(state.job_count / 2)
+						if fix_job_count:
+							state.job_count = math.floor(state.job_count / 2)
 					except (TypeError, IndexError) as exception:
 						print(f'Failed to utilize highres. fix -- incorrect value?', exception)
 				else:
 					setattr(p, 'enable_hr', False)
 					p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
-					# Fix job count
-					state.job_count = math.floor(state.job_count / 2)
+					if fix_job_count:
+						state.job_count = math.floor(state.job_count / 2)
 		else:
 			return
 
