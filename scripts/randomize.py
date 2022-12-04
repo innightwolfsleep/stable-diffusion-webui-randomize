@@ -21,8 +21,6 @@ class RandomizeScript(scripts.Script):
 	def __init__(self) -> None:
 		super().__init__()
 
-		self.randomize_prompt_word = ''
-
 	def title(self):
 		return 'Randomize'
 
@@ -79,14 +77,6 @@ class RandomizeScript(scripts.Script):
 				if param == 'styles':
 					p.styles = self._opt({param: val}, p) # type: ignore
 					self._apply_styles(p)
-
-			# Checkpoint specific
-			# TODO (mmaker): Allow for some way to format how this is inserted into the prompt
-			if len(self.randomize_prompt_word) > 0:
-				p.prompt = self.randomize_prompt_word + ', ' + p.prompt
-				if p.all_prompts and len(p.all_prompts) > 0:
-					p.all_prompts = [self.randomize_prompt_word + ', ' + prompt for prompt in p.all_prompts] # type: ignore
-
 
 	def process_batch(
 		self,
@@ -230,14 +220,7 @@ class RandomizeScript(scripts.Script):
 			if opt_name == 'sd_model_checkpoint':
 				if opt_val == '*':
 					return random.choice(list(checkpoints_list.values()))
-				choice = random.choice(opt_arr)
-				if ':' in choice:
-					ckpt_name = choice.split(':')[0].strip()
-					self.randomize_prompt_word = choice.split(':')[1].strip()
-				else:
-					ckpt_name = choice
-					self.randomize_prompt_word = ''
-				return sd_models.get_closet_checkpoint_match(ckpt_name)
+				return sd_models.get_closet_checkpoint_match(random.choice(opt_arr))
 			if opt_name == 'sd_hypernetwork':
 				if opt_val.lower() == 'none':
 					return None
@@ -302,7 +285,7 @@ class RandomizeScript(scripts.Script):
 				randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
 				randomize_other_use_scale_latent_for_hires_fix = gr.Textbox(label='Upscale latent space for highres. fix', value='', placeholder=hint_list)
 				randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='', placeholder=hint_minmax)
-				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder='Comma separated list. Specify ckpt OR ckpt:word OR *')
+				randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='', placeholder=hint_list)
 				randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
 				randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='', placeholder=hint_minmax)
 				randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='', placeholder=hint_minmax)
