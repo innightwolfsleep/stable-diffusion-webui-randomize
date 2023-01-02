@@ -130,6 +130,14 @@ class RandomizeScript(scripts.Script):
 			for param, val in self._list_params(all_opts, prefix='randomize_other_'):
 				if param in ['CLIP_stop_at_last_layers', 'eta_noise_seed_delta', 'use_scale_latent_for_hires_fix']:
 					opts.data[param] = self._opt({param: val}, p) # type: ignore
+				if param == 'sd_hypernetwork':
+					hypernetwork.load_hypernetwork(self._opt({param: val}, p))
+				if param == 'sd_hypernetwork_strength':
+					hypernetwork.apply_strength(self._opt({param: val}, p))
+					opts.data[param] = self._opt({param: val}, p) # type: ignore
+				if param == 'styles':
+					p.styles = self._opt({param: val}, p) # type: ignore
+					self._apply_styles(p)
 
 			# Highres. fix params
 			if len(randomize_hires.strip()) > 0:
