@@ -285,32 +285,33 @@ class RandomizeScript(scripts.Script):
         hint_minmax = 'Range of stepped values (min, max, step)'
         hint_list = 'Comma separated list OR * for all'
         hint_float = 'Float value from 0 to 1'
+        gr_elem_id_prefix = "webui_randomize"
 
         with gr.Group():
             with gr.Accordion('Randomize', open=False):
-                randomize_enabled = gr.Checkbox(label='Enable', value=False)
-                # randomize_param_seed = gr.Textbox(label='Seed', value='', placeholder=hint_list)
-                randomize_param_sampler_name = gr.Textbox(label='Sampler', value='', placeholder=hint_list)
-                randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='', placeholder=hint_minmax)
-                randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax)
-                randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax)
-                randomize_param_height = gr.Textbox(label='Height', value='', placeholder=hint_minmax)
-                randomize_hires = gr.Textbox(label='Highres. percentage chance', value='', placeholder=hint_float)
+                randomize_enabled = gr.Checkbox(label='Enable', value=False, elem_id=f"{gr_elem_id_prefix}_enabled")
+                # randomize_param_seed = gr.Textbox(label='Seed', value='', placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_seed")
+                randomize_param_sampler_name = gr.Textbox(label='Sampler', value='', placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_sampler_name")
+                randomize_param_cfg_scale = gr.Textbox(label='CFG Scale', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_cfg_scale")
+                randomize_param_steps = gr.Textbox(label='Steps', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_steps")
+                randomize_param_width = gr.Textbox(label='Width', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_width")
+                randomize_param_height = gr.Textbox(label='Height', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_height")
+                randomize_hires = gr.Textbox(label='Highres. percentage chance', value='', placeholder=hint_float, elem_id=f"{gr_elem_id_prefix}_hires")
                 randomize_hires_denoising_strength = gr.Textbox(label='Highres. Denoising Strength', value='',
-                                                                placeholder=hint_minmax)
-                randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
-                randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
+                                                                placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_hires_denoising_strength")
+                randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_hires_width")
+                randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_hires_height")
 #                randomize_other_use_scale_latent_for_hires_fix = gr.Textbox(
-#                    label='Upscale latent space for highres. fix', value='', placeholder=hint_list)
+#                    label='Upscale latent space for highres. fix', value='', placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_other_use_scale_latent_for_hires_fix")
                 randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='',
-                                                                      placeholder=hint_minmax)
+                                                                      placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_other_CLIP_stop_at_last_layers")
                 randomize_other_sd_model_checkpoint = gr.Textbox(label='Checkpoint name', value='',
-                                                                 placeholder=hint_list)
-#                randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list)
+                                                                 placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_other_sd_model_checkpoint")
+#                randomize_other_sd_hypernetwork = gr.Textbox(label='Hypernetwork', value='', placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_other_sd_hypernetwork")
 #                randomize_other_sd_hypernetwork_strength = gr.Textbox(label='Hypernetwork strength', value='',
-#                                                                      placeholder=hint_minmax)
+#                                                                      placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_other_sd_hypernetwork_strength")
                 randomize_other_eta_noise_seed_delta = gr.Textbox(label='Eta noise seed delta', value='',
-                                                                  placeholder=hint_minmax)
-                randomize_other_styles = gr.Textbox(label='Styles', value='', placeholder=hint_list)
+                                                                  placeholder=hint_minmax, elem_id=f"{gr_elem_id_prefix}_other_eta_noise_seed_delta")
+                randomize_other_styles = gr.Textbox(label='Styles', value='', placeholder=hint_list, elem_id=f"{gr_elem_id_prefix}_other_styles")
 
         return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_eta_noise_seed_delta, randomize_other_styles
