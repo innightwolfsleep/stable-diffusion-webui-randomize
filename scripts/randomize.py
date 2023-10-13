@@ -276,9 +276,7 @@ class RandomizeScript(scripts.Script):
                         if opt_arr[opt_entry_index] == shared.sd_upscalers[existing_upscaler_index].__dict__['name']:
                             possible_upscalers_to_use.append(shared.sd_upscalers[existing_upscaler_index].__dict__['name'])
 
-                if len(possible_upscalers_to_use) == 0:
-                    return random.choice(shared.sd_upscalers).__dict__['name']
-                else:
+                if len(possible_upscalers_to_use) != 0:
                     return random.choice(possible_upscalers_to_use)
 
             return None
