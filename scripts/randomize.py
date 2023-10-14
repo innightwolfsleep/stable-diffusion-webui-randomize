@@ -29,11 +29,11 @@ class RandomizeScript(scripts.Script):
             return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_eta_noise_seed_delta, randomize_other_styles = self._create_ui()
+        randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_hires_upscaler, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_eta_noise_seed_delta, randomize_other_styles = self._create_ui()
 
         return [randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps,
                 randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength,
-                randomize_hires_width, randomize_hires_height,
+                randomize_hires_width, randomize_hires_height, randomize_hires_upscaler, 
                 randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint,
 #                randomize_other_sd_hypernetwork,
 #                randomize_other_sd_hypernetwork_strength,
@@ -53,6 +53,7 @@ class RandomizeScript(scripts.Script):
             randomize_hires_denoising_strength: str,
             randomize_hires_width: str,
             randomize_hires_height: str,
+            randomize_hires_upscaler: str,
 #            randomize_other_use_scale_latent_for_hires_fix: str,
             randomize_other_CLIP_stop_at_last_layers: str,
             randomize_other_sd_model_checkpoint: str,
@@ -99,6 +100,7 @@ class RandomizeScript(scripts.Script):
             randomize_hires_denoising_strength: str,
             randomize_hires_width: str,
             randomize_hires_height: str,
+            randomize_hires_upscaler: str,
  #           randomize_other_use_scale_latent_for_hires_fix: str,
             randomize_other_CLIP_stop_at_last_layers: str,
             randomize_other_sd_model_checkpoint: str,
@@ -108,6 +110,7 @@ class RandomizeScript(scripts.Script):
             randomize_other_styles: str,
             **kwargs
     ):
+
         if randomize_enabled and isinstance(p, StableDiffusionProcessingTxt2Img):
             self.CLIP_stop_at_last_layers = opts.CLIP_stop_at_last_layers
 #            self.use_scale_latent_for_hires_fix = opts.use_scale_latent_for_hires_fix
@@ -181,6 +184,20 @@ class RandomizeScript(scripts.Script):
                     p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
                     if fix_job_count:
                         state.job_count = math.floor(state.job_count / 2)
+            
+            hires_upscaler = self._opt({'hires_upscaler': randomize_hires_upscaler}, p)
+            if hires_upscaler:
+                setattr(p, 'hr_upscaler', hires_upscaler)
+                
+                # I am unware of the importance of this. I don't know 
+                # if it's better to just put all of the duplicates together 
+                # and use them once, or if it really is necessary to keep them separated.
+                # I am also unsure if I need to use these lines:
+                #   if fix_job_count:
+                #   state.job_count = math.floor(state.job_count / 2)
+                #
+                # It seems to work without it.
+                p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
         else:
             return
 
@@ -249,6 +266,18 @@ class RandomizeScript(scripts.Script):
 #                if opt_val == '*':
 #                    return random.choice([0, 1])
 #                return int(random.choice(opt_arr))
+            if opt_name == 'hires_upscaler':
+                if opt_val == '*':
+                    return random.choice(shared.sd_upscalers).__dict__['name']
+                
+                possible_upscalers_to_use = []
+                for opt_entry_index in range(len(opt_arr)):
+                    for existing_upscaler_index in range(len(shared.sd_upscalers)):
+                        if opt_arr[opt_entry_index] == shared.sd_upscalers[existing_upscaler_index].__dict__['name']:
+                            possible_upscalers_to_use.append(shared.sd_upscalers[existing_upscaler_index].__dict__['name'])
+
+                if len(possible_upscalers_to_use) != 0:
+                    return random.choice(possible_upscalers_to_use)
 
             return None
 
@@ -300,6 +329,7 @@ class RandomizeScript(scripts.Script):
                                                                 placeholder=hint_minmax)
                 randomize_hires_width = gr.Textbox(label='Highres. Width', value='', placeholder=hint_minmax)
                 randomize_hires_height = gr.Textbox(label='Highres. Height', value='', placeholder=hint_minmax)
+                randomized_hires_upscaler = gr.Textbox(label='Highres. Upscaler', value='', placeholder=hint_list)
 #                randomize_other_use_scale_latent_for_hires_fix = gr.Textbox(
 #                    label='Upscale latent space for highres. fix', value='', placeholder=hint_list)
                 randomize_other_CLIP_stop_at_last_layers = gr.Textbox(label='Stop at CLIP layers', value='',
@@ -313,4 +343,4 @@ class RandomizeScript(scripts.Script):
                                                                   placeholder=hint_minmax)
                 randomize_other_styles = gr.Textbox(label='Styles', value='', placeholder=hint_list)
 
-        return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_eta_noise_seed_delta, randomize_other_styles
+        return randomize_enabled, randomize_param_sampler_name, randomize_param_cfg_scale, randomize_param_steps, randomize_param_width, randomize_param_height, randomize_hires, randomize_hires_denoising_strength, randomize_hires_width, randomize_hires_height, randomized_hires_upscaler, randomize_other_CLIP_stop_at_last_layers, randomize_other_sd_model_checkpoint, randomize_other_eta_noise_seed_delta, randomize_other_styles
